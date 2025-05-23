@@ -1,22 +1,27 @@
 import { Controller, HttpException, HttpStatus, Post } from "@nestjs/common";
-import { GameService } from "./game.service";
 import { ApiResponse } from "src/api";
-import { Clue } from "src/cluebase/cluebase";
+import { clueFetcher } from "src/services/cluebase/clue.service";
+import { Clue } from "src/services/cluebase/cluebase";
 
 @Controller()
 export class GameController {
+    constructor() { }
 
-    constructor(private readonly gameService: GameService) { }
-
-    @Post('/clue')
+    @Post('/game/clue')
     async answer(): Promise<ApiResponse<Clue>> {
+        const clue = await clueFetcher.getClue();
+
+        if (!clue) {
+            throw new HttpException("Not implemented", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         return {
             status: 'success',
-            payload: await this.gameService.fetchClue()
+            payload: clue,
         }
     }
 
-    @Post('/clue/:id/answer')
+    @Post('/game/clue/:id')
     question(): ApiResponse<null> {
         return {
             status: 'error',

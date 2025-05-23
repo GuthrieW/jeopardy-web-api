@@ -1,20 +1,22 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
 import { Clue, ClueData, ClueResponse, GameData, GameResponse } from './cluebase';
+import { cluebaseApiService } from './cluebase-api';
+import { gameFetcher } from './game.service';
 
 class ClueFetcher {
-    private readonly CLUEBASE_URL = "http://cluebase.lukelav.in" as const;
+    private readonly DEFAULT_CLUE_VALUE = 200 as const;
 
     public async getClue(): Promise<Clue> {
         const clue = await this.fetchRandomClue();
-        const game = await this.fetchGameById(clue.game_id);
+        const game = await gameFetcher.fetchGameById(clue.game_id);
         const { answer, normalizedAnswer } = this.sanitizeApiResponse(clue);
 
         return {
             answer,
             normalizedAnswer,
             clue: clue.clue,
-            value: clue.value ?? 200,
+            value: clue.value ?? this.DEFAULT_CLUE_VALUE,
             category: clue.category,
             airdate: game.air_date,
         }
@@ -23,7 +25,7 @@ class ClueFetcher {
     private async fetchRandomClue(): Promise<ClueData> {
         const clueResponse = await axios<null, AxiosResponse<ClueResponse, null>>({
             method: 'GET',
-            url: `${this.CLUEBASE_URL}/clues/random`,
+            url: `${cluebaseApiService.CLUEBASE_URL}/clues/random`,
         });
 
         if (clueResponse.data.status === 'success') {
@@ -39,19 +41,7 @@ class ClueFetcher {
         }
     }
 
-    private async fetchGameById(gameId: number): Promise<GameData> {
-        const gameResponse = await axios<null, AxiosResponse<GameResponse, null>>({
-            method: "GET",
-            url: `${this.CLUEBASE_URL}/games/${gameId}`,
-        });
 
-        if (gameResponse.data.status === 'success') {
-            return gameResponse.data.data[0];
-        } else {
-            throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-    }
 
     private sanitizeApiResponse(clue: ClueData): { answer: string, normalizedAnswer: string } {
         // clean up html elements
