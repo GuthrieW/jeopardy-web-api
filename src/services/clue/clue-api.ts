@@ -1,8 +1,8 @@
-import { Clue } from "./cluebase";
+import { Clue } from "./clue-api";
 
 
-class CluebaseApiService {
-    public readonly CLUEBASE_URL = "http://cluebase.lukelav.in" as const;
+class ClueApiService {
+    public readonly CLUE_API_URL = process.env.CLUE_API_URL;
 
     private readonly QUESTION_REGEX =
         /^(what is|what are|whats|what's|where is|where are|wheres|where's|who is|who are|whos|who's|when is|when are|whens|when's|why is|why are|whys|why's) /i;
@@ -30,4 +30,4 @@ class CluebaseApiService {
     }
 }
 
-export const cluebaseApiService: CluebaseApiService = new CluebaseApiService();
+export const clueApiService: ClueApiService = new ClueApiService();

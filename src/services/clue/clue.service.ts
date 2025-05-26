@@ -1,15 +1,14 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
-import { Clue, ClueData, ClueResponse, GameData, GameResponse } from './cluebase';
-import { cluebaseApiService } from './cluebase-api';
-import { gameFetcher } from './game.service';
+import { Clue, ClueData, ClueResponse, GameData } from './clue-api.d';
+import { clueApiService } from './clue-api';
+import { gameService } from './game.service';
 
-class ClueFetcher {
+class ClueService {
     private readonly DEFAULT_CLUE_VALUE = 200 as const;
 
     public async getClue(): Promise<Clue> {
-        const clue = await this.fetchRandomClue();
-        const game = await gameFetcher.fetchGameById(clue.game_id);
+        const clue: ClueData = await this.fetchRandomClue();
+        const game: GameData = await gameService.fetchGameById(clue.game_id);
         const { answer, normalizedAnswer } = this.sanitizeApiResponse(clue);
 
         return {
@@ -25,7 +24,7 @@ class ClueFetcher {
     private async fetchRandomClue(): Promise<ClueData> {
         const clueResponse = await axios<null, AxiosResponse<ClueResponse, null>>({
             method: 'GET',
-            url: `${cluebaseApiService.CLUEBASE_URL}/clues/random`,
+            url: `${clueApiService.CLUE_API_URL}/clues/random`,
         });
 
         if (clueResponse.data.status === 'success') {
@@ -37,7 +36,7 @@ class ClueFetcher {
 
             return clueData;
         } else {
-            throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new Error(`Failed to fetch clue from Cluebase API`);
         }
     }
 
@@ -66,4 +65,4 @@ class ClueFetcher {
     }
 }
 
-export const clueFetcher: ClueFetcher = new ClueFetcher();
+export const clueService: ClueService = new ClueService();
