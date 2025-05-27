@@ -13,21 +13,23 @@ const initializeDB = (database: string | undefined): ServerlessMysql =>
         },
     })
 
-console.log('process.env.NODE_ENV', process.env.NODE_ENV);
-const jeopardyDatabase: ServerlessMysql = initializeDB(process.env.JEOPARDY_DATABASE_NAME);
+console.log('process.env.NODE_ENV', process.env.NODE_ENV)
+const jeopardyDatabase: ServerlessMysql = initializeDB(
+    process.env.JEOPARDY_DATABASE_NAME
+)
 
 const getQueryFn =
     (db: ServerlessMysql) =>
-        async <T extends unknown>(
-            query: SQLStatement
-        ): Promise<SelectQueryResult<T>> => {
-            try {
-                const results: T[] = await db.query(query)
-                await db.end()
-                return results
-            } catch (error) {
-                return { error }
-            }
+    async <T extends unknown>(
+        query: SQLStatement
+    ): Promise<SelectQueryResult<T>> => {
+        try {
+            const results: T[] = await db.query(query)
+            await db.end()
+            return results
+        } catch (error) {
+            return { error }
         }
+    }
 
 export const jeopardyQuery = getQueryFn(jeopardyDatabase)

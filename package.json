@@ -1,33 +1,37 @@
 {
-  "name": "jeopardy-web-api",
-  "version": "0.0.1",
-  "description": "Jeopardy Web API",
-  "author": "Wesley Guthrie",
-  "private": true,
-  "license": "MIT",
-  "scripts": {
-    "start": "npm run serve",
-    "dev": "concurrently \"npm run build:watch\" \"npm run serve:watch\"",
-    "serve": "node dist/index.ts",
-    "serve:watch": "nodemon dist/index.js",
-    "build": "tsc",
-    "build:watch": "tsc -w"
-  },
-  "dependencies": {
-    "@dotenvx/dotenvx": "^1.44.1",
-    "axios": "^1.9.0",
-    "express": "^5.1.0",
-    "mysql": "^2.18.1",
-    "serverless-mysql": "^2.1.0",
-    "sql-template-strings": "^2.2.2",
-    "uuid": "^11.1.0"
-  },
-  "devDependencies": {
-    "@types/express": "^5.0.2",
-    "@types/node": "^22.15.21",
-    "eslint": "^9.27.0",
-    "prettier": "^3.5.3",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
-  }
+    "name": "jeopardy-web-api",
+    "version": "0.0.1",
+    "description": "Jeopardy Web API",
+    "author": "Wesley Guthrie",
+    "private": true,
+    "license": "MIT",
+    "scripts": {
+        "start": "npm run serve",
+        "dev": "concurrently \"npm run build:watch\" \"npm run serve:watch\"",
+        "serve": "node dist/index.ts",
+        "serve:watch": "nodemon dist/index.js",
+        "build": "tsc",
+        "build:watch": "tsc -w",
+        "scrape-clues": "npx tsx ./src/bin/clue-scraper.ts"
+    },
+    "dependencies": {
+        "@dotenvx/dotenvx": "^1.44.1",
+        "axios": "^1.9.0",
+        "express": "^5.1.0",
+        "mysql": "^2.18.1",
+        "node-html-parser": "^7.0.1",
+        "remove-accents": "^0.5.0",
+        "serverless-mysql": "^2.1.0",
+        "sql-template-strings": "^2.2.2",
+        "uuid": "^11.1.0"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.2",
+        "@types/node": "^22.15.21",
+        "eslint": "^9.27.0",
+        "eslint-config-google": "^0.14.0",
+        "prettier": "^3.5.3",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.8.3"
+    }
 }

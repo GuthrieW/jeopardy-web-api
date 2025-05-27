@@ -1,42 +1,47 @@
-import { v4 } from "uuid";
-import { jeopardyQuery } from "src/database/database";
-import SQL from "sql-template-strings";
+import { v4 } from 'uuid'
+import { jeopardyQuery } from 'src/database/database'
+import SQL from 'sql-template-strings'
+import sqlError from 'src/utils/sql-error'
 
 export type Answer = {
-    /** */
-    readonly id: string
+    /** UUID */
+    id: string
 
     /** */
-    readonly gameId: string
+    gameId: string
 
     /** */
-    readonly contestantId: string
+    contestantId: string
 
     /** */
-    readonly questionId: string
+    clueId: string
 
-    /** */
-    readonly text: string
+    /** The response text that the contestant sent. */
+    answerText: string
 
-    /** */
-    readonly correct: boolean
+    /** Whether the answer was considered to be correct. */
+    correct: boolean
 }
 
 class AnswerModel {
-    /** */
-    readonly TABLE_NAME: 'answer';
+    readonly TABLE_NAME: 'answer'
 
     public insert = async (input: Answer): Promise<boolean> => {
-        const uuid = v4();
+        const uuid = v4()
         const insertResult = await jeopardyQuery(SQL`
             INSERT INTO ${this.TABLE_NAME}
-                (id, gameId, contestantId, questionId, text, correct)
+                (id, gameId, contestantId, questionId, answerText, correct)
             VALUES
-                (${uuid}, ${input.gameId}, ${input.contestantId}, ${input.questionId}, ${input.text}, ${input.correct});
+                (${uuid}, ${input.gameId}, ${input.contestantId}, ${input.clueId}, ${input.answerText}, ${input.correct});
         `)
 
-        return !('error' in insertResult);
+        if ('error' in insertResult) {
+            sqlError('Error inserting new answer.', insertResult.error)
+            return false
+        }
+
+        return true
     }
 }
 
-export const answerModel = new AnswerModel();
+export const answerModel = new AnswerModel()
