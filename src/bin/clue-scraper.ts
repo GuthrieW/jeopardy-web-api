@@ -14,18 +14,19 @@ export type Clue = {
     airdate: string
 }
 
-const TEST_OUTPUT_FILE = './src/bin/output.txt'
+const TEST_OUTPUT_FILE = './src/bin/output.txt' as const
 
-const JEOPARDY_ARCHIVE_URL = 'https://www.j-archive.com/showgame.php'
+const JEOPARDY_ARCHIVE_URL = 'https://www.j-archive.com/showgame.php' as const
 
-const GAME_TITLE_ID = '#game_title'
-const JEOPARDY_ROUND_ID = '#jeopardy_round'
-const DOUBLE_JEOPARDY_ROUND_ID = '#double_jeopardy_round'
-const CATEGORY_CLASS = '.category_name'
-const CLUE_CLASS = '.clue'
-const CLUE_VALUE = '.clue_value'
-const CLUE_TEXT = '.clue_text'
-const CORRECT_RESPONSE = '.correct_response'
+// scraping classes and ids
+const GAME_TITLE_ID = '#game_title' as const
+const JEOPARDY_ROUND_ID = '#jeopardy_round' as const
+const DOUBLE_JEOPARDY_ROUND_ID = '#double_jeopardy_round' as const
+const CATEGORY_CLASS = '.category_name' as const
+const CLUE_CLASS = '.clue' as const
+const CLUE_VALUE = '.clue_value' as const
+const CLUE_TEXT = '.clue_text' as const
+const CORRECT_RESPONSE = '.correct_response' as const
 
 const HTML_REGEX = /<(?:.|\n)*?>/gm
 
@@ -227,7 +228,11 @@ async function fetchPageHtml(gameId: number): Promise<string> {
  */
 function sanitizeText(text: string): string {
     if (text) {
-        text = text.replaceAll('&amp;', '&').replace(HTML_REGEX, '').trim()
+        text = text
+            .replaceAll('&amp;', '&')
+            .replace(HTML_REGEX, '')
+            .toLowerCase()
+            .trim()
         text = removeAccents(text)
     }
 

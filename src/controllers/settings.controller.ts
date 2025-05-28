@@ -1,35 +1,31 @@
 import { HttpStatusCode } from 'axios'
 import { Router } from 'express'
 import { gameModel } from 'src/models/game.model'
+import { z } from 'zod'
 
 const router = Router()
 
 router.post('/speed', async (req, res) => {
-    const gameId = req.body.gameId as string
-    const newSpeed = req.body.speed as string
+    const zBody = z.object({
+        gameId: z.string(),
+        speed: z.number(),
+    })
 
-    if (!gameId) {
+    const update = zBody.safeParse(req.body)
+    if (update.error) {
         res.status(HttpStatusCode.BadRequest).json({
             status: 'error',
-            message: 'Please provide a game ID',
+            message: 'Maformed request body',
         })
         return
     }
 
-    if (!newSpeed) {
-        res.status(HttpStatusCode.BadRequest).json({
-            status: 'error',
-            message: 'Please provide a new game speed',
-        })
-        return
-    }
-
-    const newSpeedNumber = Number(newSpeed)
+    const { gameId, speed } = update.data
 
     if (
-        isNaN(newSpeedNumber) ||
-        newSpeedNumber < gameModel.DEFAULT_MINIMUM_GAME_SPEED ||
-        newSpeedNumber > gameModel.DEFAULT_MAXIMUM_GAME_SPEED
+        isNaN(speed) ||
+        speed < gameModel.DEFAULT_MINIMUM_GAME_SPEED ||
+        speed > gameModel.DEFAULT_MAXIMUM_GAME_SPEED
     ) {
         res.status(HttpStatusCode.BadRequest).json({
             status: 'error',
@@ -38,7 +34,7 @@ router.post('/speed', async (req, res) => {
         return
     }
 
-    const result = await gameModel.updateSpeed(Number(newSpeed), gameId)
+    const result = await gameModel.updateSpeed(Number(speed), gameId)
     if (!result) {
         res.status(HttpStatusCode.InternalServerError).json({
             status: 'error',
@@ -47,30 +43,35 @@ router.post('/speed', async (req, res) => {
         return
     }
 
-    res.status(HttpStatusCode.NotImplemented).json({
+    res.status(HttpStatusCode.Ok).json({
         status: 'success',
-        message: `Game #${gameId} speed set to ${newSpeed}`,
+        message: `Game #${gameId} speed set to ${speed}`,
     })
 })
 
 router.post('/infinite', async (req, res) => {
-    const gameId = req.body.gameId as string
-    const infinite = Boolean(req.body.speed) as boolean
+    const zUpdate = z.object({
+        gameId: z.string(),
+        infinite: z.boolean(),
+    })
 
-    if (!gameId) {
+    const update = zUpdate.safeParse(req.body)
+    if (update.error) {
         res.status(HttpStatusCode.BadRequest).json({
             status: 'error',
-            message: 'Please provide a game ID',
+            message: 'Maformed request body',
         })
         return
     }
+
+    const { gameId, infinite } = update.data
 
     const infiniteNumber = Number(infinite)
 
     if (isNaN(infiniteNumber) && infiniteNumber !== 0 && infiniteNumber !== 1) {
         res.status(HttpStatusCode.BadRequest).json({
             status: 'error',
-            message: `Infinite setting must be 1 or 0.`,
+            message: `Infinite setting must be true or false.`,
         })
         return
     }
@@ -84,7 +85,7 @@ router.post('/infinite', async (req, res) => {
         return
     }
 
-    res.status(HttpStatusCode.NotImplemented).json({
+    res.status(HttpStatusCode.Ok).json({
         status: 'success',
         message: `Game #${gameId} infinite set to ${infinite}`,
     })

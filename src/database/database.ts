@@ -20,9 +20,7 @@ const jeopardyDatabase: ServerlessMysql = initializeDB(
 
 const getQueryFn =
     (db: ServerlessMysql) =>
-    async <T extends unknown>(
-        query: SQLStatement
-    ): Promise<SelectQueryResult<T>> => {
+    async <T>(query: SQLStatement): Promise<SelectQueryResult<T>> => {
         try {
             const results: T[] = await db.query(query)
             await db.end()

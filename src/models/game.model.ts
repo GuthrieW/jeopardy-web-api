@@ -2,20 +2,33 @@ import { jeopardyQuery } from 'src/database/database'
 import SQL from 'sql-template-strings'
 import { v4 } from 'uuid'
 import sqlError from 'src/utils/sql-error'
+import { z } from 'zod'
+import { Model } from './_model'
 
-export type Game = {
+export const zGame = z.object({
     /** UUID */
-    id: string
+    id: z.string().uuid(),
+
+    /** */
+    name: z.string(),
 
     /** The number of seconds contestants have to answer a question. Defaults to 0. 0 means there is no time limit. */
-    speed: number
+    speed: z.number(),
 
     /** If the game is in infinite mode. Infinite mode will send a new clue once the current clue is answered correctly. */
-    infinite: boolean
-}
+    isInfinteMode: z.boolean(),
+})
 
-class GameModel {
-    readonly TABLE_NAME = 'game' as const
+export type Game = z.infer<typeof zGame>
+
+export const zGameCreate = z.object({
+    name: z.string(),
+})
+
+export type GameCreate = z.infer<typeof zGameCreate>
+
+class GameModel implements Model<Game, GameCreate> {
+    readonly TableName = 'game' as const
 
     /** */
     readonly DEFAULT_SPEED = 1 as const
@@ -33,14 +46,18 @@ class GameModel {
      *
      * @returns
      */
-    insert = async (): Promise<boolean> => {
-        const uuid = v4()
+    insert = async (input: GameCreate): Promise<boolean> => {
+        if (zGameCreate.safeParse(input).error) {
+            console.log('Game insert input malformed.', JSON.stringify(input))
+            return false
+        }
 
+        const uuid = v4()
         const insertResult = await jeopardyQuery(SQL`
-            INSERT INTO ${this.TABLE_NAME}
-                (id)
+            INSERT INTO ${this.TableName}
+                (id, name)
             VALUES
-                (${uuid});
+                (${uuid}, ${input.name});
         `)
 
         if ('error' in insertResult) {
@@ -49,6 +66,10 @@ class GameModel {
         }
 
         return true
+    }
+
+    fetchById = async (id: string): Promise<Game> => {
+        throw new Error('Not implemented')
     }
 
     /**
@@ -62,7 +83,7 @@ class GameModel {
         gameId: string
     ): Promise<boolean> => {
         const updateResult = await jeopardyQuery(SQL`
-            UPDATE ${gameModel.TABLE_NAME}
+            UPDATE ${gameModel.TableName}
             SET speed=${newSpeed}
             WHERE id=${gameId};
         `)

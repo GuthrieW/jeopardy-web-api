@@ -2,46 +2,67 @@ import { jeopardyQuery } from 'src/database/database'
 import SQL from 'sql-template-strings'
 import { v4 } from 'uuid'
 import sqlError from 'src/utils/sql-error'
+import { z } from 'zod'
+import { Model } from './_model'
 
-export type Clue = {
+export const zClue = z.object({
     /** UUID */
-    id: string
+    id: z.string().uuid(),
 
     /** The correct response for the clue. */
-    answer: string
+    answerText: z.string(),
 
     /** The text shown for the clue. */
-    clueText: string
+    clueText: z.string(),
 
     /** The amount of money the clue is worth. */
-    value: number
+    value: z.number(),
 
     /** The category the clue was provided under. */
-    category: string
+    category: z.string(),
 
     /** The show number during which the clue was aired. */
-    showNumber: string
+    showNumber: z.string(),
 
     /** The date during which the clue was aired. */
-    airdate: string
+    airdate: z.string(),
 
     /** The gameId used by J-Archive. Used to ensure we don't store duplicate clues. */
-    jArchiveGameId: string
+    jArchiveGameId: z.string(),
 
     /** If the clue is flagged as reported by a user. These need to be manually reviewed and updated for if the clue text or answer has a problem. */
-    reported: boolean
-}
+    isFlagged: z.boolean(),
+})
 
-class ClueModel {
-    readonly TABLE_NAME = 'clue' as const
+export type Clue = z.infer<typeof zClue>
 
-    public insert = async (clue: Clue) => {
+export const zClueCreate = z.object({
+    answerText: z.string(),
+    clueText: z.string(),
+    value: z.number(),
+    category: z.string(),
+    showNumber: z.string(),
+    airdate: z.string(),
+    jArchiveGameId: z.string(),
+})
+
+export type ClueCreate = z.infer<typeof zClueCreate>
+
+class ClueModel implements Model<Clue, ClueCreate> {
+    readonly TableName = 'clue' as const
+
+    insert = async (input: ClueCreate): Promise<boolean> => {
+        if (zClueCreate.safeParse(input).error) {
+            console.log('Clue insert input malformed.', JSON.stringify(input))
+            return false
+        }
+
         const uuid = v4()
         const insertResult = await jeopardyQuery(SQL`
-            INSERT INTO ${this.TABLE_NAME}
+            INSERT INTO ${this.TableName}
                 (id, answer, clueText, value, category, showNumber, airdate, jArchiveGameId)
             VALUES
-                (${uuid}, ${clue.answer}, ${clue.clueText}, ${clue.value}, ${clue.category}, ${clue.showNumber}, ${clue.airdate}, ${clue.jArchiveGameId});
+                (${uuid}, ${input.answerText}, ${input.clueText}, ${input.value}, ${input.category}, ${input.showNumber}, ${input.airdate}, ${input.jArchiveGameId});
         `)
 
         if ('error' in insertResult) {
@@ -52,15 +73,15 @@ class ClueModel {
         return true
     }
 
-    public insertMany = async (clues: Clue[]) => {
-        const query = SQL`INSERT INTO ${this.TABLE_NAME} (id, answer, clueText, value, category, showNumber, airdate, jArchiveGameId) VALUES `
+    insertMany = async (inputs: ClueCreate[]): Promise<boolean> => {
+        const query = SQL`INSERT INTO ${this.TableName} (id, answer, clueText, value, category, showNumber, airdate, jArchiveGameId) VALUES `
 
-        clues.forEach((clue, index) => {
+        inputs.forEach((input, index) => {
             const uuid = v4()
             if (index !== 0) {
                 query.append(',')
             }
-            query.append(` (${uuid}, ${clue.answer}, ${clue.clueText}, ${clue.value}, ${clue.category}, ${clue.showNumber}, ${clue.airdate}, ${clue.jArchiveGameId});
+            query.append(` (${uuid}, ${input.answerText}, ${input.clueText}, ${input.value}, ${input.category}, ${input.showNumber}, ${input.airdate}, ${input.jArchiveGameId})
 `)
         })
         query.append(';')
@@ -72,6 +93,47 @@ class ClueModel {
         }
 
         return true
+    }
+
+    fetchById = async (id: string): Promise<Clue | null> => {
+        const queryResult = await jeopardyQuery<Clue>(
+            SQL`SELECT * FROM ${this.TableName} ORDER BY RAND() LIMIT 1;`
+        )
+
+        if ('error' in queryResult) {
+            sqlError('Error fetching random clue.', queryResult.error)
+            return null
+        }
+
+        if (queryResult.length === 0) {
+            console.error(`Clue with id ${id} not found.`)
+            return null
+        }
+
+        if (queryResult.length > 1) {
+            console.error(`Multiple clues with id ${id} found.`)
+            return null
+        }
+
+        return queryResult[0]
+    }
+
+    fetchRandom = async (): Promise<Clue | null> => {
+        const queryResult = await jeopardyQuery<Clue>(
+            SQL`SELECT * FROM ${this.TableName} ORDER BY RAND() LIMIT 1;`
+        )
+
+        if ('error' in queryResult) {
+            sqlError('Error fetching random clue.', queryResult.error)
+            return null
+        }
+
+        if (queryResult.length === 0) {
+            console.error(`Unable to fetch random clue.`)
+            return null
+        }
+
+        return queryResult[0]
     }
 }
 
