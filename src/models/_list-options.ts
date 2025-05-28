@@ -1,4 +1,4 @@
-export class ListOptions<T> {
+export class ListOptions {
     limit: number
     offset: number
     order: 'ASC' | 'DESC' | null
