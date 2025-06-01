@@ -1,6 +1,7 @@
 import { HttpStatusCode } from 'axios'
 import { Router } from 'express'
 import { clueModel } from 'src/models/clue.model'
+import { gameModel } from 'src/models/game.model'
 import { statisticModel } from 'src/models/statistic.model'
 import { answerService } from 'src/services/answer-service'
 import { z } from 'zod'
@@ -8,11 +9,28 @@ import { z } from 'zod'
 const router = Router()
 
 router.post('/clue/random', async (req, res) => {
+    const zBody = z.object({
+        gameId: z.string().uuid(),
+    })
+    const body = zBody.safeParse(req.body)
+
+    if (body.error) {
+        res.status(HttpStatusCode.BadRequest)
+            .json({
+                status: 'error',
+                message: 'Malformed request',
+            })
+            .end()
+        return
+    }
+
     const clue = await clueModel.fetchRandom()
 
     if (!clue) {
         throw new Error('Error fetching clue')
     }
+
+    await gameModel.updateClueId(body.data.gameId, clue.id)
 
     res.status(HttpStatusCode.Ok).json({
         status: 'success',
@@ -37,7 +55,7 @@ router.post('/clue/:id', async (req, res) => {
         res.status(HttpStatusCode.BadRequest)
             .json({
                 status: 'error',
-                message: 'Maformed request',
+                message: 'Malformed request',
             })
             .end()
         return
@@ -80,7 +98,11 @@ router.post('/clue/:id', async (req, res) => {
         isCorrect,
     })
 
-    res.status(HttpStatusCode.NotImplemented).json({
+    if (isCorrect) {
+        await gameModel.updateClueId(body.data.gameId, null)
+    }
+
+    res.status(HttpStatusCode.Ok).json({
         status: 'success',
         payload: {
             isCorrect,

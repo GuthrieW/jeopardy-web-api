@@ -19,7 +19,7 @@ router.get('/leaderboard', async (req, res) => {
     if (body.error) {
         res.status(HttpStatusCode.BadRequest).json({
             status: 'error',
-            message: 'Maformed request',
+            message: 'Malformed request',
         })
         return
     }
@@ -51,7 +51,7 @@ router.get('/leaderboard/:id', async (req, res) => {
     if (query.error || body.error) {
         res.status(HttpStatusCode.BadRequest).json({
             status: 'error',
-            message: 'Maformed request',
+            message: 'Malformed request',
         })
         return
     }

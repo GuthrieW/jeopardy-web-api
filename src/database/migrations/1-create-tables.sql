@@ -40,6 +40,7 @@ CREATE TABLE `contestant`
 CREATE TABLE `game`
 (
     `id` CHAR(36) NOT NULL,
+    `currentClueId` CHAR(36),
     `speed` VARCHAR(6) NOT NULL DEFAULT 0,
     `isInfinteMode` TINYINT(1) NOT NULL DEFAULT 0,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

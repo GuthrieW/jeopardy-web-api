@@ -10,6 +10,9 @@ export const zGame = z.object({
     id: z.string().uuid(),
 
     /** */
+    currentClueId: z.string().uuid(),
+
+    /** */
     name: z.string(),
 
     /** The number of seconds contestants have to answer a question. Defaults to 0. 0 means there is no time limit. */
@@ -75,6 +78,27 @@ class GameModel implements Model<Game, GameCreate> {
 
     fetchById = async (id: string): Promise<Game> => {
         throw new Error('Not implemented')
+    }
+
+    updateClueId = async (
+        gameId: string,
+        clueId: string | null
+    ): Promise<boolean> => {
+        const updateResult = await jeopardyQuery(SQL`
+            UPDATE ${gameModel.TableName}
+            SET currentClueId=${clueId}
+            WHERE id=${gameId};    
+        `)
+
+        if ('error' in updateResult) {
+            sqlError(
+                `Error updating currentClueId. Game ID: ${gameId}. Clue ID: ${clueId}.`,
+                updateResult.error
+            )
+            return false
+        }
+
+        return true
     }
 
     /**

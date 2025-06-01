@@ -15,7 +15,7 @@ router.post('/speed', async (req, res) => {
     if (update.error) {
         res.status(HttpStatusCode.BadRequest).json({
             status: 'error',
-            message: 'Maformed request body',
+            message: 'Malformed request body',
         })
         return
     }
@@ -59,7 +59,7 @@ router.post('/infinite', async (req, res) => {
     if (update.error) {
         res.status(HttpStatusCode.BadRequest).json({
             status: 'error',
-            message: 'Maformed request body',
+            message: 'Malformed request body',
         })
         return
     }
