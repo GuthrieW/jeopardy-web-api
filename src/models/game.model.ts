@@ -17,6 +17,12 @@ export const zGame = z.object({
 
     /** If the game is in infinite mode. Infinite mode will send a new clue once the current clue is answered correctly. */
     isInfinteMode: z.boolean(),
+
+    /** */
+    createdAt: z.date(),
+
+    /** */
+    updatedAt: z.date(),
 })
 
 export type Game = z.infer<typeof zGame>
@@ -44,12 +50,11 @@ class GameModel implements Model<Game, GameCreate> {
 
     /**
      *
-     * @returns
      */
-    insert = async (input: GameCreate): Promise<boolean> => {
+    insert = async (input: GameCreate): Promise<Game | null> => {
         if (zGameCreate.safeParse(input).error) {
             console.log('Game insert input malformed.', JSON.stringify(input))
-            return false
+            return null
         }
 
         const uuid = v4()
@@ -62,10 +67,10 @@ class GameModel implements Model<Game, GameCreate> {
 
         if ('error' in insertResult) {
             sqlError('Error inserting new game.', insertResult.error)
-            return false
+            return null
         }
 
-        return true
+        return await this.fetchById(uuid)
     }
 
     fetchById = async (id: string): Promise<Game> => {
@@ -74,9 +79,6 @@ class GameModel implements Model<Game, GameCreate> {
 
     /**
      *
-     * @param newSpeed
-     * @param gameId
-     * @returns
      */
     updateSpeed = async (
         newSpeed: number,
@@ -101,9 +103,6 @@ class GameModel implements Model<Game, GameCreate> {
 
     /**
      *
-     * @param infinite
-     * @param gameId
-     * @returns
      */
     updateInfinite = async (
         infinite: number,

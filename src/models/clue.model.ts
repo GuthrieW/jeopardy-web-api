@@ -32,6 +32,12 @@ export const zClue = z.object({
 
     /** If the clue is flagged as reported by a user. These need to be manually reviewed and updated for if the clue text or answer has a problem. */
     isFlagged: z.boolean(),
+
+    /** */
+    createdAt: z.date(),
+
+    /** */
+    updatedAt: z.date(),
 })
 
 export type Clue = z.infer<typeof zClue>
@@ -51,10 +57,13 @@ export type ClueCreate = z.infer<typeof zClueCreate>
 class ClueModel implements Model<Clue, ClueCreate> {
     readonly TableName = 'clue' as const
 
-    insert = async (input: ClueCreate): Promise<boolean> => {
+    /**
+     *
+     */
+    insert = async (input: ClueCreate): Promise<Clue | null> => {
         if (zClueCreate.safeParse(input).error) {
             console.log('Clue insert input malformed.', JSON.stringify(input))
-            return false
+            return null
         }
 
         const uuid = v4()
@@ -67,12 +76,15 @@ class ClueModel implements Model<Clue, ClueCreate> {
 
         if ('error' in insertResult) {
             sqlError('Error inserting new clue.', insertResult.error)
-            return false
+            return null
         }
 
-        return true
+        return await this.fetchById(uuid)
     }
 
+    /**
+     *
+     */
     insertMany = async (inputs: ClueCreate[]): Promise<boolean> => {
         const query = SQL`INSERT INTO ${this.TableName} (id, answer, clueText, value, category, showNumber, airdate, jArchiveGameId) VALUES `
 
@@ -95,6 +107,9 @@ class ClueModel implements Model<Clue, ClueCreate> {
         return true
     }
 
+    /**
+     *
+     */
     fetchById = async (id: string): Promise<Clue | null> => {
         const queryResult = await jeopardyQuery<Clue>(
             SQL`SELECT * FROM ${this.TableName} ORDER BY RAND() LIMIT 1;`
@@ -118,6 +133,9 @@ class ClueModel implements Model<Clue, ClueCreate> {
         return queryResult[0]
     }
 
+    /**
+     *
+     */
     fetchRandom = async (): Promise<Clue | null> => {
         const queryResult = await jeopardyQuery<Clue>(
             SQL`SELECT * FROM ${this.TableName} ORDER BY RAND() LIMIT 1;`

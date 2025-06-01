@@ -1,7 +1,7 @@
 import { HttpStatusCode } from 'axios'
 import { Router } from 'express'
-import { ListOptions } from 'src/models/_list-options'
-import { statisticModel, zStatistic } from 'src/models/statistic.model'
+import { ListOptions } from 'src/models/list-options'
+import { statisticModel } from 'src/models/statistic.model'
 import { z } from 'zod'
 
 const router = Router()
@@ -56,7 +56,7 @@ router.get('/leaderboard/:id', async (req, res) => {
         return
     }
 
-    const leaderboard = await statisticModel.fetchGameLeaderboard(
+    const leaderboard = await statisticModel.fetchLeaderboardByGameId(
         query.data.id,
         new ListOptions(body.data)
     )

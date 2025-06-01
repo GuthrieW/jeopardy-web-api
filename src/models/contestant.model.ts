@@ -14,6 +14,12 @@ export const zContestant = z.object({
 
     /** The contestants name. */
     name: z.string(),
+
+    /** */
+    createdAt: z.date(),
+
+    /** */
+    updatedAt: z.date(),
 })
 
 export type Contestant = z.infer<typeof zContestant>
@@ -28,14 +34,16 @@ export type ContestantCreate = z.infer<typeof zContestantCreate>
 class ContestantModel implements Model<Contestant, ContestantCreate> {
     readonly TableName = 'contestant' as const
 
-    /** */
-    insert = async (input: ContestantCreate): Promise<boolean> => {
+    /**
+     *
+     */
+    insert = async (input: ContestantCreate): Promise<Contestant | null> => {
         if (zContestantCreate.safeParse(input).error) {
             console.log(
                 'Contestant insert input malformed.',
                 JSON.stringify(input)
             )
-            return false
+            return null
         }
 
         const uuid = v4()
@@ -48,12 +56,15 @@ class ContestantModel implements Model<Contestant, ContestantCreate> {
 
         if ('error' in insertResult) {
             sqlError('Error inserting new contestant.', insertResult.error)
-            return false
+            return null
         }
 
-        return true
+        return await this.fetchById(uuid)
     }
 
+    /**
+     *
+     */
     fetchById = async (id: string): Promise<Contestant> => {
         throw new Error('Not implemented')
     }

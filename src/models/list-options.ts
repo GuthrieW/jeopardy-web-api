@@ -1,8 +1,8 @@
 export class ListOptions {
     limit: number
     offset: number
-    order: 'ASC' | 'DESC' | null
-    sort: string | null
+    order: 'ASC' | 'DESC'
+    sort: string
 
     constructor({
         limit,

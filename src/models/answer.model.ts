@@ -23,6 +23,12 @@ export const zAnswer = z.object({
 
     /** Whether the answer was considered to be correct. */
     isCorrect: z.boolean(),
+
+    /** */
+    createdAt: z.date(),
+
+    /** */
+    updatedAt: z.date(),
 })
 
 export type Answer = z.infer<typeof zAnswer>
@@ -40,10 +46,13 @@ export type AnswerCreate = z.infer<typeof zAnswerCreate>
 class AnswerModel implements Model<Answer, AnswerCreate> {
     readonly TableName: 'answer'
 
-    insert = async (input: AnswerCreate): Promise<boolean> => {
+    /**
+     *
+     */
+    insert = async (input: AnswerCreate): Promise<Answer | null> => {
         if (zAnswerCreate.safeParse(input).error) {
             console.log('Answer insert input malformed.', JSON.stringify(input))
-            return false
+            return null
         }
 
         const uuid = v4()
@@ -56,13 +65,16 @@ class AnswerModel implements Model<Answer, AnswerCreate> {
 
         if ('error' in insertResult) {
             sqlError('Error inserting new answer.', insertResult.error)
-            return false
+            return null
         }
 
-        return true
+        return await this.fetchById(uuid)
     }
 
-    fetchById = async (id: string): Promise<Answer> => {
+    /**
+     *
+     */
+    fetchById = async (id: string): Promise<Answer | null> => {
         throw new Error('Not implemented')
     }
 }
