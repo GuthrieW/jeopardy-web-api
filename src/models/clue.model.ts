@@ -25,7 +25,7 @@ export const zClue = z.object({
     showNumber: z.string(),
 
     /** The date during which the clue was aired. */
-    airdate: z.string(),
+    airDate: z.string(),
 
     /** The gameId used by J-Archive. Used to ensure we don't store duplicate clues. */
     jArchiveGameId: z.string(),
@@ -48,7 +48,7 @@ export const zClueCreate = z.object({
     value: z.number(),
     category: z.string(),
     showNumber: z.string(),
-    airdate: z.string(),
+    airDate: z.string(),
     jArchiveGameId: z.string(),
 })
 
@@ -69,9 +69,9 @@ class ClueModel implements Model<Clue, ClueCreate> {
         const uuid = v4()
         const insertResult = await jeopardyQuery(SQL`
             INSERT INTO ${this.TableName}
-                (id, answer, clueText, value, category, showNumber, airdate, jArchiveGameId)
+                (id, answer, clueText, value, category, showNumber, airDate, jArchiveGameId)
             VALUES
-                (${uuid}, ${input.answerText}, ${input.clueText}, ${input.value}, ${input.category}, ${input.showNumber}, ${input.airdate}, ${input.jArchiveGameId});
+                (${uuid}, ${input.answerText}, ${input.clueText}, ${input.value}, ${input.category}, ${input.showNumber}, ${input.airDate}, ${input.jArchiveGameId});
         `)
 
         if ('error' in insertResult) {
@@ -86,14 +86,14 @@ class ClueModel implements Model<Clue, ClueCreate> {
      *
      */
     insertMany = async (inputs: ClueCreate[]): Promise<boolean> => {
-        const query = SQL`INSERT INTO ${this.TableName} (id, answer, clueText, value, category, showNumber, airdate, jArchiveGameId) VALUES `
+        const query = SQL`INSERT INTO ${this.TableName} (id, answer, clueText, value, category, showNumber, airDate, jArchiveGameId) VALUES `
 
         inputs.forEach((input, index) => {
             const uuid = v4()
             if (index !== 0) {
                 query.append(',')
             }
-            query.append(` (${uuid}, ${input.answerText}, ${input.clueText}, ${input.value}, ${input.category}, ${input.showNumber}, ${input.airdate}, ${input.jArchiveGameId})
+            query.append(` (${uuid}, ${input.answerText}, ${input.clueText}, ${input.value}, ${input.category}, ${input.showNumber}, ${input.airDate}, ${input.jArchiveGameId})
 `)
         })
         query.append(';')

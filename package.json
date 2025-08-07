@@ -12,7 +12,8 @@
         "serve:watch": "nodemon dist/index.js",
         "build": "tsc",
         "build:watch": "tsc -w",
-        "scrape-clues": "npx tsx ./src/bin/clue-scraper.ts"
+        "scrape-clues:dev": "NODE_ENV=dev npx tsx ./src/bin/clue-scraper.ts",
+        "scrape-clues:prod": "NODE_ENV=prod npx tsx ./src/bin/clue-scraper.ts"
     },
     "dependencies": {
         "@dotenvx/dotenvx": "^1.44.1",

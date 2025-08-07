@@ -4,6 +4,7 @@ import { parse } from 'node-html-parser'
 import removeAccents from 'remove-accents'
 import SQL from 'sql-template-strings'
 import { jeopardyQuery } from 'src/database/database'
+import { v4 } from 'uuid'
 
 export type Clue = {
     answer: string
@@ -11,7 +12,7 @@ export type Clue = {
     value: number
     category: string
     showNumber: number
-    airdate: string
+    airDate: string
 }
 
 const TEST_OUTPUT_FILE = './src/bin/output.txt' as const
@@ -33,6 +34,7 @@ const HTML_REGEX = /<(?:.|\n)*?>/gm
 const dateFormatter = new Intl.DateTimeFormat('en', {
     year: 'numeric',
     month: 'short',
+    day: 'numeric',
 })
 
 void main()
@@ -46,19 +48,21 @@ void main()
     })
 
 async function main() {
-    let gameId = 50
+    // jArchiveGameId's start at 1, but we need to initialize at 0 because we need to increment at the top of the loop
+    let gameId = 0
     while (true) {
         gameId++
         console.log(`Started scraping gameId ${gameId}`)
 
         const existingRecords = await jeopardyQuery(
-            SQL`SELECT * FROM clues WHERE jArchiveGameId=${gameId} LIMIT 1;`
+            SQL`SELECT * FROM clue WHERE jArchiveGameId=${gameId} LIMIT 1;`
         )
         if ('error' in existingRecords) {
             console.error(
                 `Error querying database for existing records with jArchiveGameId of ${gameId}`,
                 existingRecords.error
             )
+            await sleep(5000)
             continue
         }
 
@@ -106,8 +110,18 @@ async function main() {
                 })
             })
 
+        await insertClues([...jeopardyClues, ...doubleJeopardyClues], gameId)
+
         console.log(`Finished scraping gameId ${gameId}`)
         await sleep(5000)
+        process.exit(0)
+    }
+}
+
+async function insertClues(clues: Clue[], gameId: number) {
+    for (const clue of clues) {
+        const query = SQL`INSERT INTO clue (id, answerText, clueText, value, category, showNumber, airDate, jArchiveGameId) VALUES (${v4()}, ${clue.answer}, ${clue.clueText}, ${clue.value}, ${clue.category}, ${clue.showNumber}, ${clue.airDate}, ${gameId});`
+        const queryResult = await jeopardyQuery(query)
     }
 }
 
@@ -117,8 +131,8 @@ function parseTitle(rootHtml: HTMLElement): [string, string] | [] {
 
     if (titleParts && titleParts.length > 1) {
         const showNumber = titleParts[0].split('#')[1].trim()
-        const airdate = titleParts[1].trim()
-        return [showNumber, dateFormatter.format(new Date(airdate))]
+        const airDate = titleParts[1].trim()
+        return [showNumber, dateFormatter.format(new Date(airDate))]
     }
 
     return []
@@ -127,7 +141,7 @@ function parseTitle(rootHtml: HTMLElement): [string, string] | [] {
 function parseClues(
     roundHtml: Element,
     showNumber: string,
-    airdate: string
+    airDate: string
 ): Clue[] {
     const categoryElements = roundHtml?.querySelectorAll(CATEGORY_CLASS)
     const clueElements = roundHtml?.querySelectorAll(CLUE_CLASS)
@@ -157,7 +171,7 @@ function parseClues(
                 value: Number(value),
                 category,
                 showNumber: Number(showNumber),
-                airdate,
+                airDate,
             }
             const isValid = isValidClue(newClue)
 
@@ -180,7 +194,7 @@ function isValidClue({
     value,
     category,
     showNumber,
-    airdate,
+    airDate,
 }: Clue): boolean {
     if (
         !answer ||
@@ -199,7 +213,7 @@ function isValidClue({
         !value ||
         !category ||
         !showNumber ||
-        !airdate
+        !airDate
     ) {
         return false
     }
@@ -228,11 +242,7 @@ async function fetchPageHtml(gameId: number): Promise<string> {
  */
 function sanitizeText(text: string): string {
     if (text) {
-        text = text
-            .replaceAll('&amp;', '&')
-            .replace(HTML_REGEX, '')
-            .toLowerCase()
-            .trim()
+        text = text.replaceAll('&amp;', '&').replace(HTML_REGEX, '').trim()
         text = removeAccents(text)
     }
 

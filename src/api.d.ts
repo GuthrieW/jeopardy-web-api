@@ -3,9 +3,9 @@ export type ApiError = {
     message: string
 }
 
-export type ApiResponse<T> =
-    | {
-          status: 'success'
-          payload: T
-      }
-    | ApiError
+export type ApiSuccess = {
+    status: 'success'
+    payload: T
+}
+
+export type ApiResponse<T> = ApiSuccess | ApiError

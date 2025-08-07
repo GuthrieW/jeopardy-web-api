@@ -1,5 +1,8 @@
 import mysql, { ServerlessMysql } from 'serverless-mysql'
 import { SQLStatement } from 'sql-template-strings'
+import dotenv from '@dotenvx/dotenvx'
+
+dotenv.config()
 
 type SelectQueryResult<T> = T[] | { error: unknown }
 
@@ -9,7 +12,7 @@ const initializeDB = (database: string | undefined): ServerlessMysql =>
             host: process.env.DATABASE_HOST,
             user: process.env.DATABASE_USER,
             password: process.env.DATABASE_PASSWORD,
-            database,
+            database: `${database}_${process.env.NODE_ENV}`,
         },
     })
 
@@ -26,6 +29,7 @@ const getQueryFn =
             await db.end()
             return results
         } catch (error) {
+            console.log('err', error)
             return { error }
         }
     }
